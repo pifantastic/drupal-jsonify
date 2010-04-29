@@ -1,0 +1,56 @@
+<?php
+
+function jsonify_init() {
+  drupal_add_js(drupal_get_path('module', 'jsonify') . '/jsonify.js');
+}
+
+function jsonify_menu() {
+  $items = array();
+  
+  $items['jsonify/node/%'] = array(
+    'title' => 'Outputs json representation of a node',
+    'page callback' => 'jsonify_get_node',
+    'page arguments' => array(2),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+  $items['jsonify/comment/%'] = array(
+    'title' => 'Outputs json representation of a comment',
+    'page callback' => 'jsonify_get_comment',
+    'page arguments' => array(2),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+  
+  return $items;
+}
+
+function jsonify_get_node($nid) {
+  $node = node_load($nid);
+  if ($node && $node->nid) {
+    jsonify_output($node);
+  }
+  else {
+    jsonify_output(new stdClass());
+  }
+}
+
+function jsonify_get_comment($cid) {
+  jsonify_output(jsonify_comment_load($cid));
+}
+
+function jsonify_comment_load($cid) {
+  $comment = db_fetch_object(db_query('
+    SELECT c.cid, c.nid, c.uid, c.subject, c.comment, c.name AS username, n.title AS node_title 
+    FROM {comments} c, {node} n 
+    WHERE c.nid = n.nid AND c.cid = %d', $cid
+  ));
+  
+  return ($comment === FALSE) ? new stdClass() : $comment;
+}
+
+function jsonify_output($data) {
+  header("Content-Type: application/json");
+  echo function_exists("json_encode") ? json_encode($data) : drupal_to_js($data);
+  exit(0);
+}

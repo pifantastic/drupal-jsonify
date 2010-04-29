@@ -1,0 +1,5 @@
+; $Id$
+name = Jsonify
+description = Provides javascript methods for asynchronously loading noads
+core = 6.x
+package = Other

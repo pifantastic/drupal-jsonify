@@ -1,5 +1,5 @@
 ; $Id$
 name = Jsonify
-description = Provides javascript methods for asynchronously loading nodes and comments
+description = Provides javascript methods for asynchronously loading nodes
 core = 6.x
 package = Other

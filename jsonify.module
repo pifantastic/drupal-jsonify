@@ -1,22 +1,29 @@
 <?php
 
+/**
+ * Implementation of hook_init().
+ */
 function jsonify_init() {
   drupal_add_js(drupal_get_path('module', 'jsonify') . '/jsonify.js');
 }
 
+/**
+ * Implementation of hook_menu().
+ */
 function jsonify_menu() {
   $items = array();
   
-  $items['jsonify/node/%'] = array(
+  $items['jsonify/node/%node'] = array(
     'title' => 'Outputs json representation of a node',
-    'page callback' => 'jsonify_get_node',
+    'page callback' => 'jsonify_output',
     'page arguments' => array(2),
-    'access arguments' => array('access content'),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 2),
     'type' => MENU_CALLBACK
   );
-  $items['jsonify/comment/%'] = array(
+  $items['jsonify/comment/%jsonify_comment'] = array(
     'title' => 'Outputs json representation of a comment',
-    'page callback' => 'jsonify_get_comment',
+    'page callback' => 'jsonify_output',
     'page arguments' => array(2),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK
@@ -25,32 +32,22 @@ function jsonify_menu() {
   return $items;
 }
 
-function jsonify_get_node($nid) {
-  $node = node_load($nid);
-  if ($node && $node->nid) {
-    jsonify_output($node);
-  }
-  else {
-    jsonify_output(new stdClass());
-  }
-}
-
-function jsonify_get_comment($cid) {
-  jsonify_output(jsonify_comment_load($cid));
-}
-
+/**
+ * Load a comment object based on its cid
+ */
 function jsonify_comment_load($cid) {
-  $comment = db_fetch_object(db_query('
+  return db_fetch_object(db_query('
     SELECT c.cid, c.nid, c.uid, c.subject, c.comment, c.name AS username, n.title AS node_title 
-    FROM {comments} c, {node} n 
-    WHERE c.nid = n.nid AND c.cid = %d', $cid
+    FROM {comments} c INNER JOIN {node} n ON c.nid = n.nid 
+    WHERE c.status = %d AND c.cid = %d', COMMENT_PUBLISHED, $cid
   ));
-  
-  return ($comment === FALSE) ? new stdClass() : $comment;
 }
 
-function jsonify_output($data) {
+/**
+ * Output json object with the appropriate json headers.
+ */ 
+function jsonify_output($object) {
   header("Content-Type: application/json");
-  echo function_exists("json_encode") ? json_encode($data) : drupal_to_js($data);
+  echo drupal_to_js($object);
   exit(0);
 }

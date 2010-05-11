@@ -47,7 +47,12 @@ Drupal.jsonify = {
       comment: Drupal.settings.basePath + "jsonify/comment/" + id
     };
     
-    return !(type in urls) || Drupal.jsonify.get(urls[type], callback);
+    if (type in urls) {
+      return Drupal.jsonify.get(urls[type], callback);
+    }
+    else {
+      throw Drupal.t("Jsonify Error: Unsupported type: @type. Supported types: node, comment.", {'@type': type});
+    }
   }
 };
 

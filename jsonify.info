@@ -2,4 +2,4 @@
 name = Jsonify
 description = Provides javascript methods for asynchronously loading nodes
 core = 6.x
-package = Other
+package = Javascript
